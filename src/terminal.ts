@@ -1,4 +1,4 @@
-import type { Life } from './life.js';
+import type { Grid, GridSize } from './grid.js';
 
 // ANSI escape codes, understood by terminals as commands instead of text.
 const hideCursor = '\x1b[?25l';
@@ -13,13 +13,7 @@ const brailleBlank = 0x2800;
 const cellsPerCharacterAcross = 2;
 const cellsPerCharacterDown = 4;
 
-/** The size of a grid in cells. */
-export type GridSize = {
-	cols: number;
-	rows: number;
-};
-
-/** Draws a `Life` grid in the terminal and animates it on stdout. */
+/** Draws a `Grid` in the terminal, on stdout. */
 export class Terminal {
 	/**
 	 * The size of the largest grid that fits in the terminal window.
@@ -42,40 +36,40 @@ export class Terminal {
 	}
 
 	/**
-	 * The current grid of `life` as text, drawn with braille characters.
+	 * The current generation of `grid` as text, drawn with braille characters.
 	 *
 	 * Each character holds a block of cells 2 wide and 4 tall, one dot per live cell.
 	 * Every line of characters ends in a newline.
 	 */
-	frame(life: Life): string {
+	frame(grid: Grid): string {
 		let text = '';
-		for (let y = 0; y < life.rows; y += cellsPerCharacterDown) {
-			for (let x = 0; x < life.cols; x += cellsPerCharacterAcross) {
+		for (let row = 0; row < grid.rows; row += cellsPerCharacterDown) {
+			for (let col = 0; col < grid.cols; col += cellsPerCharacterAcross) {
 				// Each dot of a braille character has its own value. The bottom row's values are out
 				// of sequence because braille originally had three rows. Cells past the edge read as dead.
 				let dots = 0;
-				if (life.isAlive(x, y)) {
+				if (grid.isAlive(col, row)) {
 					dots += 0x01;
 				}
-				if (life.isAlive(x, y + 1)) {
+				if (grid.isAlive(col, row + 1)) {
 					dots += 0x02;
 				}
-				if (life.isAlive(x, y + 2)) {
+				if (grid.isAlive(col, row + 2)) {
 					dots += 0x04;
 				}
-				if (life.isAlive(x, y + 3)) {
+				if (grid.isAlive(col, row + 3)) {
 					dots += 0x40;
 				}
-				if (life.isAlive(x + 1, y)) {
+				if (grid.isAlive(col + 1, row)) {
 					dots += 0x08;
 				}
-				if (life.isAlive(x + 1, y + 1)) {
+				if (grid.isAlive(col + 1, row + 1)) {
 					dots += 0x10;
 				}
-				if (life.isAlive(x + 1, y + 2)) {
+				if (grid.isAlive(col + 1, row + 2)) {
 					dots += 0x20;
 				}
-				if (life.isAlive(x + 1, y + 3)) {
+				if (grid.isAlive(col + 1, row + 3)) {
 					dots += 0x80;
 				}
 
@@ -92,24 +86,21 @@ export class Terminal {
 	}
 
 	/**
-	 * Starts the animation of `life`: every `intervalMs` milliseconds it draws the grid, calls
-	 * `beforeGeneration`, where the caller can change the grid, and then advances one generation.
-	 * Runs until `Ctrl+C`, which restores the cursor and exits.
+	 * Gets the terminal ready for drawing: hides the cursor and clears the screen.
+	 * From then on `Ctrl+C` restores the cursor and exits. Call it once, before the first `draw`.
 	 */
-	start(life: Life, intervalMs: number, beforeGeneration: () => void) {
+	open() {
 		process.stdout.write(hideCursor + clearScreen);
 
-		const timer = setInterval(() => {
-			// Redraw over the previous frame instead of scrolling.
-			process.stdout.write(cursorHome + this.frame(life));
-			beforeGeneration();
-			life.nextGeneration();
-		}, intervalMs);
-
 		process.on('SIGINT', () => {
-			clearInterval(timer);
 			process.stdout.write(showCursor + '\n');
 			process.exit(0);
 		});
+	}
+
+	/** Writes the current generation of `grid` to stdout as a frame, over the previous frame. */
+	draw(grid: Grid) {
+		// Redraw over the previous frame instead of scrolling.
+		process.stdout.write(cursorHome + this.frame(grid));
 	}
 }
