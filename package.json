@@ -1,7 +1,11 @@
 {
-	"name": "gol",
+	"name": "@julianone/gol",
 	"version": "0.1.0",
+	"description": "Conway's Game of Life, animated in the terminal or on a canvas.",
 	"type": "module",
+	"bin": {
+		"gol": "dist/cli.js"
+	},
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
@@ -9,8 +13,16 @@
 		}
 	},
 	"files": [
-		"dist"
+		"dist",
+		"src",
+		"!src/**/*.test.ts"
 	],
+	"engines": {
+		"node": ">=26"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
 	"scripts": {
 		"build": "rm -rf dist && tsc",
 		"dev": "tsc --watch",
@@ -18,7 +30,8 @@
 		"test": "vitest run",
 		"format": "prettier . --write",
 		"lint": "eslint .",
-		"prepare": "husky"
+		"prepare": "husky",
+		"prepublishOnly": "npm run lint && npm test && npm run build"
 	},
 	"lint-staged": {
 		"*.{js,ts}": [
@@ -30,9 +43,17 @@
 		"type": "git",
 		"url": "git+https://github.com/julian-one/gol.git"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
+	"keywords": [
+		"game-of-life",
+		"conway",
+		"life",
+		"cellular-automaton",
+		"canvas",
+		"terminal",
+		"cli"
+	],
+	"author": "julian-one",
+	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/julian-one/gol/issues"
 	},

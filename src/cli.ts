@@ -1,5 +1,6 @@
-// Entry point for `npm start`: shows the simulation in the terminal, on a grid as large as the
-// terminal window can show.
+#!/usr/bin/env node
+// Entry point for the `gol` command and `npm start`: shows the simulation in the terminal, on a
+// grid as large as the terminal window can show.
 import { Simulation } from './simulation.js';
 import { Terminal } from './terminal.js';
 
